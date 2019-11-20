@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1568339987 source:e:\usc_1st_sem\csci561-ai\ai-assignment1\main.cpp
+	<iostream>
+	<fstream>
+	<vector>
+

@@ -1,0 +1,11 @@
+2
+HAVE(John,Barry)
+HAVE(Bob,Barry)
+7
+HOUND(x) => HOWL(x)
+HAVE(x,y) & CAT(y) & HAVE(x,z) => ~MOUSE(z)
+LS(x) & HAVE(x,y) =>  ~HOWL(y)
+CAT(a) => ~HOUND(a)
+LS(John)
+HAVE(John,b)
+MOUSE(b)

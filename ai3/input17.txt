@@ -1,0 +1,11 @@
+1
+Hate(Marcus, Caesar)
+8
+Man(Marcus)
+Roman(Marcus)
+Man(x) => Person(x)
+Ruler(Caesar)
+Roman(x) & ~Loyal(x,Caesar) => Hate(x,Caesar)
+Loyal(x,y)
+Person(x) & Ruler(y) & Tryassasin(x,y) => ~Loyal(x,y)
+Tryassasin(Marcus,Caesar)

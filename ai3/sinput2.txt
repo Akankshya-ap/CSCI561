@@ -1,0 +1,10 @@
+2
+Alert(Bob,NSAIDs)
+Alert(Bob,VitC)
+6
+Take(x,Warfarin) => ~Take(x,NSAIDs)
+Take(a,y) => ~Take(b,z)
+HighBP(x) => Alert(x,NSAIDs)
+Take(Bob,Antacids)
+Take(Bob,VitA)
+HighBP(Bob)

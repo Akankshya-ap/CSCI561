@@ -1,0 +1,18 @@
+1
+likes(John,Peanuts)
+15
+food(x) => likes(John,x)
+food(Apple)
+food(vegetables)
+eats(x, y) & ~killed(x) => food(y)
+eats (Anil, Peanuts)
+alive(Anil)
+eats(Anil,x) => eats(Harry,x)
+~killed(x) => alive(x)
+alive(x) => ~killed(x)
+eats(Anil,Peanuts)
+eats(Bill,Peanuts)
+eats(Bob,Peanuts)
+eats(Anne,Peanuts)
+eats(y,Peanuts)
+eats(s,c)

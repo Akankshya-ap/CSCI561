@@ -1,0 +1,9 @@
+1
+Ancestor(Liz,Billy)
+6
+Parent(x,y) & Ancestor(y,z) => Ancestor(x,z)
+Parent(x,y) => Ancestor(x,y)
+Mother(x,y) => Parent(x,y)
+Father(x,y) => Parent(x,y)
+Mother(Liz,Charley)
+Father(Charley,Billy)

@@ -1,0 +1,7 @@
+1
+Rich(Me)
+4
+Phd(x) => HighlyQualified(x)
+~Phd(x) => EarlyEarnings(x)
+HighlyQualified(x) => Rich(x)
+EarlyEarnings(x) => Rich(x)

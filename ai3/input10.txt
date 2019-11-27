@@ -1,0 +1,13 @@
+1
+Likes(John, Apple)
+10
+Food(x) => Likes(John, x)
+Eats(x, y) & ~Killed(x) => Food(y)
+Eats(Anil, Peanuts)
+Alive(Anil)
+Eats(Anil,x) => Eats(Harry,x)
+~Killed(x) => Alive(x)
+Alive(x) => ~Killed(x)
+Likes(John, Peanuts)
+Food(Apple)
+Food(Vegetables)

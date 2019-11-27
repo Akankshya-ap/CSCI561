@@ -1,0 +1,14 @@
+2
+Buy(Karthik,Taco)
+~Buy(Karthik,Taco)
+9
+Better(x,y,z) & Hungry(x) => Buy(x,y)
+~Rich(x) & Cheap(y) & Expensive(z) => Better(x,y,z)
+Rich(x) & Cheap(x) & Expensive(z) => Better(x,z,y)
+Poor(x) => ~Rich(x)
+Poor(x) => Hungry(x)
+Cheap(Taco)
+Expensive(Pizza)
+Poor(Karthik)
+Rich(Keerthana)
+Hungry(Keerthana)

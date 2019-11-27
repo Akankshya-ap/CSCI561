@@ -1,0 +1,471 @@
+#include<iostream>
+#include<stdio.h>
+#include<math.h>
+#include<vector>
+#include<bits/stdc++.h>
+#define sentences vector<string>
+#define pb push_back
+#define mp make_pair
+#define xy pair<int,int>
+#define xyv vector<xy>
+#define hold_ind unordered_map<string,vector<xy>>
+#define ss unordered_map<string, string>
+using namespace std;
+struct predicate
+{
+    string name;
+    sentences args;
+    bool neg;
+    predicate(string n, sentences a, bool s)
+    {
+        name=n;
+        args=a;
+        neg=s;
+    }
+    predicate make_negative()
+    {
+        bool s=!neg;
+        string n=name;
+        sentences a=args;
+        return predicate(n,a,s);
+    }
+    bool operator==(const predicate &p) const
+    {
+        size_t signature1 = 17;
+        signature1 = signature1 * 31 + hash<bool>()(this->neg);
+        signature1 = signature1 * 31 + hash<string>()(this->name);
+        for (int i = 0; i < this->args.size(); i++)
+                signature1 = signature1 * 31 + hash<string>()(this->args[i]);
+
+        size_t signature2 = 17;
+        signature2 = signature2 * 31 + hash<bool>()(p.neg);
+        signature2 = signature2 * 31 + hash<string>()(p.name);
+        for (int i = 0; i < p.args.size(); i++)
+                signature2 = signature2 * 31 + hash<string>()(p.args[i]);
+        return signature1 == signature2;
+    }
+};
+typedef vector<predicate> pred;
+typedef vector<pred> kbsentences;
+bool checkVar(const string &x) {
+    return islower(x[0]);
+}
+bool checkLit(const predicate &p) {
+    for (int i = 0; i < p.args.size(); i++) {
+        if (checkVar(p.args[i]))
+            return false;
+    }
+    return true;
+}
+struct hash_predicate {
+    size_t operator()(const predicate &p) const {
+        size_t signature = 17;
+        signature = signature * 31 + hash<bool>()(p.neg);
+        signature = signature * 31 + hash<string>()(p.name);
+        for (int j = 0; j < p.args.size(); j++) {
+            signature = signature * 31 + hash<string>()(p.args[j]);
+        }
+        return signature;
+    }
+};
+struct hash_sentence {
+    size_t operator()(const pred &s) const {
+        //Variable rewriting is used to equalize the sentences
+        //After rewriting the order of the variables in the predicates matters and not the variable names
+        int variable_count = 0;
+        unordered_map<string, int> visited_variables;
+
+        size_t signature = 0;
+        for (int i = 0; i < s.size(); i++) {
+            size_t temp = 17;
+            temp = temp * 31 + hash<bool>()(s[i].neg);
+            temp = temp * 31 + hash<string>()(s[i].name);
+            for (int j = 0; j < s[i].args.size(); j++) {
+                if (checkVar(s[i].args[j])) {
+                    if (visited_variables.count(s[i].args[j]) == 0) {
+                        //If variable hasn't been visited before
+                        //Add to visited_variables
+                        variable_count++;
+                        visited_variables[s[i].args[j]] = variable_count;
+                    }
+                    temp = temp * 31 + hash<int>()(visited_variables[s[i].args[j]]);
+                } else {
+                    temp = temp * 31 + hash<string>()(s[i].args[j]);
+                }
+            }
+            signature ^= temp;
+        }
+        return signature;
+    }
+};
+void donegation(sentences &s,int &d)
+{
+    int j=0;
+    if(s[0]!="~")
+        {s.insert(s.begin(),"~");
+        d++,j=1;}
+    for(;j<d;j++)
+    {
+        if(s[j]=="~" )//|| s[j]==" ")
+            {s.erase(s.begin()+j);
+            j--,d--;}
+        else if(s[j]=="&")
+            {
+                s[j]="|";
+                if(s[j+1]!="~")
+                    {s.insert(s.begin()+j+1,"~");
+                    j++,d++;}
+            }
+    }
+}
+void convertToCNF(sentences &s)
+{
+    sentences:: iterator ind=find(s.begin(),s.end(),"=>");
+    if(ind!=s.end())
+    {int d=distance(s.begin(),ind);
+        donegation(s,d);
+        s[d]="|";
+    }
+}
+void printvec(sentences s)
+{
+    cout<<"\n";
+    for(int j=0;j<s.size();j++)
+        cout<<s[j];
+}
+void printpred(pred p)
+{
+    for(int i=0;i<p.size();i++)
+    {
+        cout<<"\n"<<p[i].name<<" "<<p[i].neg<<" ";//<<p[i].args.size()<<" "<<p[i].neg;
+        printvec(p[i].args);
+    }
+}
+void standardize(sentences &s,int i)
+{
+    //printvec(s);
+    for(int j=0;j<s.size();j++)
+    {
+        if(s[j]=="~" || s[j]=="|")
+            continue;
+        else
+        {
+            int l=s[j].length();
+            for(int k=0;k<l;k++)
+            {
+                while(s[j][k]!='(' && s[j][k]!=',' && s[j][k]!=')')
+                    k++;
+                if(islower(s[j][k+1]))
+                    {   s[j].insert(k+2,to_string(i));
+                        //variables_used.insert(make_pair())
+                        l++,k+=2;
+                        }
+            }
+        }
+    }
+}
+pred GetPredicateArg(sentences &s)
+{
+    pred p1;
+    for(int i=0;i<s.size();i++)
+    {
+        if(s[i]!="~" && s[i]!="|")
+        {
+            int j=0;
+            while(s[i][j]!='(')
+                    j++;
+                string temp(s[i],0,j);
+                j++;
+            sentences arg;
+            for(int k=j;k<s[i].length();k++)
+            {
+                while(s[i][j]!=')' && s[i][j]!=',')
+                    j++;
+                arg.pb(s[i].substr(k,j-k));
+                k=j;
+                j++;
+            }
+            if(i-1>=0)
+                p1.pb({temp,arg,s[i-1]=="~"});
+            else
+                p1.pb({temp,arg,false});
+        }
+    }
+    return p1;
+}
+void factorize(pred &s)
+{
+        unordered_set<predicate, hash_predicate> visited;
+        vector<int> remove_ind;
+        int l=s.size();
+        for (int i = 0; i < l; i++) {
+                //cout<<s[i].name;
+            if (visited.count(s[i]) == 0)
+                visited.insert(s[i]);
+            else
+                {s.erase(s.begin() + i);
+                i--;
+                l--;}
+        }
+}
+class Storing
+{
+    private:
+        hold_ind positive;
+        hold_ind positive_lit;
+        hold_ind negative;
+        hold_ind negative_lit;
+        kbsentences data;
+    public:
+        void printalldata()
+        {for(int i=0;i<data.size();i++)
+        {for(int j=0;j<data[i].size();j++)
+            {cout<<data[i][j].name<<" "<<data[i][j].neg;
+                printvec(data[i][j].args);}
+            cout<<"\n\n";}
+        }
+        Storing copy()
+        {
+            Storing store;
+            //t.variables = this->variables;
+            store.data = this->data;
+            store.positive = this->positive;
+            store.positive_lit = this->positive_lit;
+            store.negative = this->negative;
+            store.negative_lit = this->negative_lit;
+            return store;
+        }
+        void store(pred p)
+        {
+            data.pb(p);
+            int dl=data.size()-1;
+            for(int i=0;i<p.size();i++)
+            {
+                if(checkLit(p[i]))
+                {
+                if(p[i].neg)
+                    negative_lit[p[i].name].pb(mp(dl,i));
+                else
+                    positive_lit[p[i].name].pb(mp(dl,i));
+                }
+                else{
+                    if(p[i].neg)
+                        negative[p[i].name].pb(mp(dl,i));
+                else
+                    positive[p[i].name].pb(mp(dl,i));
+                }
+            }
+        }
+        vector<pair<pred,int>> getSentences(predicate &p)
+        {   xyv lidx;
+            xyv sidx;
+            if(p.neg)
+                {lidx=negative_lit[p.name];
+                    sidx=negative[p.name];}
+            else
+                {lidx=positive_lit[p.name];
+                    sidx=positive[p.name];}
+
+            vector<pair<pred,int>> res;
+            for(int i=0;i<lidx.size();i++)
+            {
+                res.pb(mp(data[lidx[i].first],lidx[i].second));
+            }
+            for(int i=0;i<sidx.size();i++)
+            {
+                res.pb(mp(data[sidx[i].first],sidx[i].second));
+            }
+            return res;
+        }
+};
+Storing database;
+sentences tokenize(string s)
+{
+    s.erase(std::remove_if(s.begin(), s.end(), ::isspace), s.end());
+    sentences s2;
+    int i=0;
+    while(i<s.length())
+    {
+        switch(s[i])
+        {
+            case '(':s2.pb("(");
+                    i++;
+                    continue;
+            case ')':s2.pb(")");
+                    i++;
+                    continue;
+            case '~':s2.pb("~");
+                    i++;
+                    continue;
+            case '&':s2.pb("&");
+                    i++;
+                    continue;
+            //case ' ':i++;
+            //        continue;
+        }
+        if(s[i]=='=' && s[i+1]=='>')
+            {s2.pb("=>");
+            i++;}
+        else
+        {
+            auto j=i+1;
+            while(s[j]!=')'){j++;}
+            string  temp(s,i,j-i+1);
+            s2.pb(temp);
+            i=j;
+        }
+        i++;
+    }
+    return s2;
+}
+void addToKB(string &s,int i)
+{
+    sentences token_s=tokenize(s);           //printvec(token_s);
+    convertToCNF(token_s);            //printvec(token_s);
+    standardize(token_s,i);            //printvec(token_s);
+    pred set_pred=GetPredicateArg(token_s);            //printpred(set_pred);
+    factorize(set_pred);            //printpred(set_pred);
+    database.store(set_pred);            //printalldata();            //insertToKB(set_pred);
+}
+sentences &unify_var(ss &theta, sentences &x)
+{
+    for (int i = 0; i < x.size(); i++) {
+        while (theta.count(x[i]) > 0)
+            x[i] = theta[x[i]];
+    }
+    return x;
+}
+bool unify(sentences &x, sentences &y, ss &theta)
+{
+        if (x.size() != y.size())
+            return false;
+        for (int i = 0; i < x.size(); i++) {
+            if (x[i] != y[i]) {
+                if (checkVar(x[i]))
+                    {theta[x[i]] = y[i];}
+                else if (checkVar(y[i]))
+                    {theta[y[i]] = x[i];}
+                else
+                    return false;
+                x = unify_var(theta,x);
+                y = unify_var(theta,y);
+            }
+        }
+        return true;
+    }
+bool askToKB(string &s)
+{
+            sentences token_s=tokenize(s);
+            pred actual=GetPredicateArg(token_s);
+            //printvec(token_s);
+            int d=1;
+            donegation(token_s,d);
+            //printvec(token_s);
+            pred q=GetPredicateArg(token_s);
+            Storing temporary=database.copy();
+            temporary.store(q);
+            temporary.printalldata();
+            queue<pred> first;
+            unordered_set<pred,hash_sentence> LoopDetect;
+            first.push(q);
+            //cout<<"\n\n\n";
+            while(!first.empty())
+            {
+                pred current=first.front();
+                //printpred(current);
+                first.pop();
+                for(int i=0;i<current.size();i++)
+                {
+                    int d=1;
+                    predicate res=current[i].make_negative();
+                    //cout<<res.name<<" "<<res.neg;
+                    vector<pair<pred,int>> resSentences=temporary.getSentences(res);
+                    for(int j=0;j< resSentences.size();j++)
+                    {
+                        ss theta;
+                        if(resSentences[j].first[resSentences[j].second].name==current[i].name && resSentences[j].first[resSentences[j].second].neg!=
+					    current[i].neg)
+                        {
+                            //cout<<resSentences[j].first[resSentences[j].second].neg;
+                            sentences x=current[i].args;
+                            sentences y=resSentences[j].first[resSentences[j].second].args;
+                            //cout<<y[0];
+                            if(unify(x,y,theta))
+                            {
+                                pred p1=current;
+                                pred p2=resSentences[j].first;
+
+                                for(int k=0;k<p1.size();k++)
+                                    p1[k].args=unify_var(theta,p1[k].args);
+                                for(int k=0;k<p2.size();k++)
+                                    p2[k].args=unify_var(theta,p2[k].args);
+
+                                p1.erase(p1.begin()+i);
+                                p2.erase(p2.begin()+resSentences[j].second);
+
+                                pred total;
+                                total.insert(total.end(),p1.begin(),p1.end());
+                                total.insert(total.end(),p2.begin(),p2.end());
+                                factorize(total);
+                                //printpred(total);
+                                //cout<<"next iter\n";
+                                if(total.empty())
+                                    {   database.store(actual);
+                                        return true;}
+                                if(LoopDetect.count(total)==0)
+                                {
+                                    //printpred(total);
+                                    //cout<<"iter\n";
+                                    temporary.store(total);
+                                    first.push(total);
+                                    LoopDetect.insert(total);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        return false;
+}
+int main()
+{
+    int nq;
+    sentences queries;
+    int nkb;
+    string sq;
+    ifstream inf1;
+    inf1.open("2.txt");
+    inf1>>nq;
+    for(int i=0;i<nq;i++)
+    {
+        getline(inf1,sq);
+         while (sq.length()==0 )
+            getline(inf1,sq);
+        queries.pb(sq);
+    }
+        queries.pb(sq);
+    inf1>>nkb;
+    for(int i=0;i<nkb;i++)
+    {
+        getline(inf1,sq);
+         while (sq.length()==0 )
+            getline(inf1,sq);
+        addToKB(sq,i);
+    }
+    ofstream f2;
+    f2.open("output.txt");
+    for(int j=0;j<nq-1;j++)
+        {bool ans=askToKB(queries[j]);
+        //kb.printalldata();
+        if(ans==0)
+            f2<<"FALSE\n";
+        else
+            f2<<"TRUE\n";
+        }
+       bool ans=askToKB(queries[nq-1]);
+        if(ans==0)
+            f2<<"FALSE";
+        else
+            f2<<"TRUE";
+    return 0;
+}

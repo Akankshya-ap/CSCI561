@@ -1,0 +1,4 @@
+1
+Take(Bob,A)
+1
+Take(x,x)

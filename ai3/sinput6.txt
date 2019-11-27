@@ -1,0 +1,4 @@
+1
+Ancestor(Liz,Billy)
+1
+~Parent(x,y) & Ancestor(y,z) => Ancestor(x,z)
